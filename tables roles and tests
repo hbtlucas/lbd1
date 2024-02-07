@@ -1,0 +1,78 @@
+---------PREPARAÇÃO DO AMBIENTE----------- 
+
+create tablespace lbd location 'C:\Users\herbe\Desktop\lbd';
+
+set default_tablespace = lbd;
+
+create user herbert with encrypted password 'abc';
+
+create database dadoslbd with owner = herbert;
+
+grant all privileges on database dadoslbd to herbert;
+
+alter user herbert with superuser;
+
+\c dadoslbd herbert
+
+-----------CRIAÇÃO DE TABELAS------------
+create table cursos(codigocurso numeric (3) primary key, nomecurso varchar(50));
+
+create table notas(nrlancamento numeric (5) primary key, matricula numeric (5), codigodisciplina numeric (4), codigocurso numeric (3));
+
+create table disciplinas(codigodisciplina numeric(4) primary key, nomedisciplina varchar(40));
+
+altertable notas add constraint codigodisciplina_fk foreing key (codigodisciplina) references disciplinas(codigodisciplina);
+
+altertable notas add constraint codigocurso_fk foreing key (codigocurso) references cursos(codigocurso);
+
+-------------CRIAÇÃO DE ROLES-----------
+
+create role secreatira login password 'abc';
+
+grant connect on database dadoslbd to secretaria;
+
+create role aluno login password 'abc';
+
+create role coordenador login password 'abc';
+
+grant connect on database dadoslbd to aluno, coordenador;
+
+grant select, insert, update on table notas,cursos,disciplinas to secretaria;
+
+grant select on table notas,cursos,disciplinas to aluno;
+
+grant select, insert, update, delete on table notas,cursos,disciplinas to coordenador;
+
+----------------TESTES----------------------
+
+\c dadoslbd secretaria
+abc
+
+select * from disciplinas;
+
+insert into disciplinas (codigodisciplina, nomedisciplina) values (01,'Banco de dados');
+
+update disciplinas set codigodisciplina = 2, nomedisciplina = 'banco de dadoos' where codigodisciplina = 1;
+
+select * from notas;
+
+\c dadoslbd aluno
+abc
+
+select * from notas;
+
+insert into cursos (codigocurso, nomecurso) values (2, 'abcdd');
+ERRO:  permission denied for table cursos
+
+\c coordenador
+abc
+
+select * from disciplinas;
+
+insert into disciplinas (codigodisciplina, nomedisciplina) values (01,'Banco de dados');
+
+update disciplinas set codigodisciplina = 2, nomedisciplina = 'banco de dadoos' where codigodisciplina = 1;
+
+select * from notas;
+
+delete * from disciplinas;
